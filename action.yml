@@ -1,0 +1,25 @@
+name: 'Setup TestLens'
+description: 'Performs TestLens setup'
+inputs:
+  token:
+    description: 'Token for authentication'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Add Gradle init script
+      run: |
+        cat << 'EOF' > $GRADLE_USER_HOME/init.d/testlens-init.gradle
+        gradle.allprojects {
+          plugins.withId('java') {
+            testing.suites.configureEach {
+              dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:0.1.0-SNAPSHOT') }
+            }
+          }
+          tasks.withType(Test).configureEach {
+            systemProperty('app.testlens.project-id', '${{ github.repository }}')
+            systemProperty('app.testlens.token', '${{ inputs.token }}')
+          }
+        }
+        EOF
