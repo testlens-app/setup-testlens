@@ -9,6 +9,7 @@ runs:
   using: 'composite'
   steps:
     - name: Add Gradle init script
+      shell: bash
       run: |
         cat << 'EOF' > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.allprojects {
