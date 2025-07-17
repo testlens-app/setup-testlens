@@ -14,6 +14,9 @@ runs:
         cat << 'EOF' > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.allprojects {
           if (new File('${{ github.workspace }}').absolutePath == rootProject.projectDir.absolutePath) {
+            def isPR = System.getenv('GITHUB_REF_NAME')?.endsWith('/merge')?:false
+            def attempt = System.getenv('GITHUB_RUN_ATTEMPT')?.toInteger()?:1
+            def disableCache = isPR && attempt > 1
             plugins.withId('java') {
               testing.suites.configureEach {
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:0.1.0-SNAPSHOT') }
@@ -22,6 +25,9 @@ runs:
             tasks.withType(Test).configureEach {
               systemProperty('app.testlens.project-id', '${{ github.repository }}')
               systemProperty('app.testlens.token', '${{ inputs.token }}')
+              if (disableCache) {
+                outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
+              }
             }
           }
         }
