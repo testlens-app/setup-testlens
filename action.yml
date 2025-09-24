@@ -1,12 +1,12 @@
-name: 'Setup TestLens'
-description: 'Performs TestLens setup'
+name: "Setup TestLens"
+description: "Performs TestLens setup"
 inputs:
   token:
-    description: 'Token for authentication'
+    description: "Token for authentication"
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Add Gradle init script
       shell: bash
@@ -32,3 +32,6 @@ runs:
           }
         }
         EOF
+
+        # Escape windows paths stored in GitHub variables
+        sed -i 's|\\|/|g' $GRADLE_USER_HOME/init.d/testlens-init.gradle
