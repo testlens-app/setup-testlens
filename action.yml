@@ -8,12 +8,19 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Export Workspace Path
+      shell: bash
+      run: echo "WORKSPACE_PATH=$(echo ${{ github.workspace }})" >> $GITHUB_ENV
+    - name: Escape Workspace Path
+      if: runner.os == 'Windows'
+      shell: bash
+      run: echo "WORKSPACE_PATH=$(echo ${{ github.workspace }} | sed 's|\\|/|g')" >> $GITHUB_ENV
     - name: Add Gradle init script
       shell: bash
       run: |
         cat << 'EOF' > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.allprojects {
-          if (new File('${{ github.workspace }}').absolutePath == rootProject.projectDir.absolutePath) {
+          if (new File('${{ env.WORKSPACE_PATH }}').absoluteFile == rootProject.projectDir.absoluteFile) {
             def isPR = System.getenv('GITHUB_REF_NAME')?.endsWith('/merge')?:false
             def attempt = System.getenv('GITHUB_RUN_ATTEMPT')?.toInteger()?:1
             def disableCache = isPR && attempt > 1
@@ -32,6 +39,3 @@ runs:
           }
         }
         EOF
-
-        # Escape windows paths stored in GitHub variables
-        sed -i 's|\\|/|g' $GRADLE_USER_HOME/init.d/testlens-init.gradle
