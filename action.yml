@@ -29,11 +29,12 @@ runs:
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:0.1.0-SNAPSHOT') }
               }
             }
-            tasks.withType(Test).configureEach {
-              systemProperty('app.testlens.project-id', '${{ github.repository }}')
-              systemProperty('app.testlens.token', '${{ inputs.token }}')
+            tasks.withType(Test).configureEach { task ->
+              task.systemProperty('app.testlens.project-id', '${{ github.repository }}')
+              task.systemProperty('app.testlens.token', '${{ inputs.token }}')
+              task.systemProperty('app.testlens.work-unit-path', task.path)
               if (disableCache) {
-                outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
+                task.outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
               }
             }
           }
