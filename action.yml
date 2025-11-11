@@ -1,10 +1,14 @@
 name: "Setup TestLens"
 description: "Performs TestLens setup"
 inputs:
-  github_token:
+  github-token:
     description: "The GitHub token used for authentication"
     required: true
     default: ${{ github.token }}
+  instrumentation-version:
+    description: "The version of app.testlens:junit-platform-instrumentation to use"
+    required: true
+    default: "1.0.0"
 
 runs:
   using: "composite"
@@ -27,12 +31,12 @@ runs:
             def disableCache = isPR && attempt > 1
             plugins.withId('java') {
               testing.suites.configureEach {
-                dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:0.1.0-SNAPSHOT') }
+                dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:${{ inputs.instrumentation-version }}') }
               }
             }
             tasks.withType(Test).configureEach { task ->
               task.systemProperty('app.testlens.project-id', '${{ github.repository }}')
-              task.systemProperty('app.testlens.github-token', '${{ inputs.github_token }}')
+              task.systemProperty('app.testlens.github-token', '${{ inputs.github-token }}')
               task.systemProperty('app.testlens.work-unit-path', task.path)
               if (disableCache) {
                 task.outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
