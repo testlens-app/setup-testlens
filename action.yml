@@ -1,10 +1,6 @@
 name: "Setup TestLens"
 description: "Performs TestLens setup"
 inputs:
-  token:
-    description: "Token for authentication"
-    required: false
-    default: ''
   github_token:
     description: "The GitHub token used for authentication"
     required: true
@@ -36,7 +32,6 @@ runs:
             }
             tasks.withType(Test).configureEach { task ->
               task.systemProperty('app.testlens.project-id', '${{ github.repository }}')
-              task.systemProperty('app.testlens.token', '${{ inputs.token }}')
               task.systemProperty('app.testlens.github-token', '${{ inputs.github_token }}')
               task.systemProperty('app.testlens.work-unit-path', task.path)
               if (disableCache) {
