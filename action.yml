@@ -8,7 +8,7 @@ inputs:
   instrumentation-version:
     description: "The version of app.testlens:junit-platform-instrumentation to use"
     required: true
-    default: "1.0.0"
+    default: "1.1.0"
 
 runs:
   using: "composite"
