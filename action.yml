@@ -13,30 +13,32 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Export Workspace Path
-      shell: bash
-      run: echo "WORKSPACE_PATH=$(echo ${{ github.workspace }})" >> $GITHUB_ENV
-    - name: Escape Workspace Path
-      if: runner.os == 'Windows'
-      shell: bash
-      run: echo "WORKSPACE_PATH=$(echo ${{ github.workspace }} | sed 's|\\|/|g')" >> $GITHUB_ENV
     - name: Add Gradle init script
       shell: bash
+      env:
+        TESTLENS_PROJECT_ID: ${{ github.repository }}
+        TESTLENS_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INSTRUMENTATION_VERSION: ${{ inputs.instrumentation-version }}
+        RUNNER_OS: ${{ runner.os }}
+        WORKSPACE_PATH: ${{ github.workspace }}
       run: |
-        cat << 'EOF' > $GRADLE_USER_HOME/init.d/testlens-init.gradle
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
+        fi
+        cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.allprojects {
-          if (new File('${{ env.WORKSPACE_PATH }}').absoluteFile == rootProject.projectDir.absoluteFile) {
+          if (new File('$WORKSPACE_PATH').absoluteFile == rootProject.projectDir.absoluteFile) {
             def isPR = System.getenv('GITHUB_REF_NAME')?.endsWith('/merge')?:false
             def attempt = System.getenv('GITHUB_RUN_ATTEMPT')?.toInteger()?:1
             def disableCache = isPR && attempt > 1
             plugins.withId('java') {
               testing.suites.configureEach {
-                dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:${{ inputs.instrumentation-version }}') }
+                dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:$INSTRUMENTATION_VERSION') }
               }
             }
             tasks.withType(Test).configureEach { task ->
-              task.environment('TESTLENS_PROJECT_ID', '${{ github.repository }}')
-              task.environment('TESTLENS_GITHUB_TOKEN', '${{ inputs.github-token }}')
+              task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
+              task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
               if (disableCache) {
                 task.outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
