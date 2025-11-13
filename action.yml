@@ -13,18 +13,20 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Export Workspace Path
+      shell: bash
+      run: echo "WORKSPACE_PATH=$(echo ${{ github.workspace }})" >> $GITHUB_ENV
+    - name: Escape Workspace Path
+      if: runner.os == 'Windows'
+      shell: bash
+      run: echo "WORKSPACE_PATH=$(echo ${{ github.workspace }} | sed 's|\\|/|g')" >> $GITHUB_ENV
     - name: Add Gradle init script
       shell: bash
       env:
         TESTLENS_PROJECT_ID: ${{ github.repository }}
         TESTLENS_GITHUB_TOKEN: ${{ inputs.github-token }}
         INSTRUMENTATION_VERSION: ${{ inputs.instrumentation-version }}
-        RUNNER_OS: ${{ runner.os }}
-        WORKSPACE_PATH: ${{ github.workspace }}
       run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
-        fi
         cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.allprojects {
           if (new File('$WORKSPACE_PATH').absoluteFile == rootProject.projectDir.absoluteFile) {
