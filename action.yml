@@ -28,21 +28,31 @@ runs:
         cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.allprojects {
           if (new File('$WORKSPACE_PATH').absoluteFile == rootProject.projectDir.absoluteFile) {
-            def isPR = System.getenv('GITHUB_REF_NAME')?.endsWith('/merge')?:false
-            def attempt = System.getenv('GITHUB_RUN_ATTEMPT')?.toInteger()?:1
-            def disableCache = isPR && attempt > 1
             plugins.withId('java') {
               testing.suites.configureEach {
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:$INSTRUMENTATION_VERSION') }
               }
             }
             tasks.withType(Test).configureEach { task ->
+              def muteMarker = new File(task.temporaryDir, "testlens-mute.marker")
               task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
               task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
-              if (disableCache) {
-                task.outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
-              }
+              task.environment("TESTLENS_MUTE_MARKER_FILE", muteMarker.absolutePath)
+              task.doLast(new DoNotStoreInCacheIfMutedAction(muteMarker))
+            }
+          }
+        }
+        
+        class DoNotStoreInCacheIfMutedAction implements Action<Task> {
+          private File muteMarker
+          DoNotStoreInCacheIfMutedAction(File muteMarker) {
+            this.muteMarker = muteMarker
+          }
+          void execute(Task task) {
+            if (muteMarker.isFile()) {
+              task.outputs.doNotStoreInCache()
+              muteMarker.delete()
             }
           }
         }
