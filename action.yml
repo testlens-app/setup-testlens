@@ -35,12 +35,9 @@ runs:
               }
             }
             tasks.withType(Test).configureEach { task ->
-              def systemProperties = [
-                '-Dapp.testlens.project-id=${{ github.repository }}',
-                '-Dapp.testlens.github-token=${{ inputs.github-token }}',
-                "-Dapp.testlens.work-unit-path=${task.path}"
-              ]
-              task.jvmArgumentProviders.add({systemProperties} as CommandLineArgumentProvider)
+              task.environment('TESTLENS_PROJECT_ID', '${{ github.repository }}')
+              task.environment('TESTLENS_GITHUB_TOKEN', '${{ inputs.github-token }}')
+              task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
               if (disableCache) {
                 task.outputs.doNotCacheIf("Potentially contains tests muted by TestLens") { true }
               }
