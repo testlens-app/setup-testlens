@@ -39,20 +39,17 @@ runs:
               task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
               task.environment("TESTLENS_MUTE_MARKER_FILE", muteMarker.absolutePath)
-              task.doLast(new DoNotStoreInCacheIfMutedAction(muteMarker))
-            }
-          }
-        }
-        
-        class DoNotStoreInCacheIfMutedAction implements Action<Task> {
-          private File muteMarker
-          DoNotStoreInCacheIfMutedAction(File muteMarker) {
-            this.muteMarker = muteMarker
-          }
-          void execute(Task task) {
-            if (muteMarker.isFile()) {
-              task.outputs.doNotStoreInCache()
-              muteMarker.delete()
+              task.addTestListener(new TestListener() {
+                void beforeTest(TestDescriptor __) {}
+                void afterTest(TestDescriptor __, TestResult ___) {}
+                void beforeSuite(TestDescriptor __) {}
+                void afterSuite(TestDescriptor __, TestResult ___) {
+                  if (muteMarker.isFile()) {
+                    task.outputs.doNotStoreInCache()
+                    muteMarker.delete()
+                  }
+                }
+              })
             }
           }
         }
