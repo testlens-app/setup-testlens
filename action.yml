@@ -9,6 +9,10 @@ inputs:
     description: "The version of app.testlens:junit-platform-instrumentation to use"
     required: true
     default: "1.3.0"
+  writeLogFile:
+    description: "Writes diagnostic output to log files and attaches them as artifacts to the workflow run"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -35,10 +39,12 @@ runs:
             }
             tasks.withType(Test).configureEach { task ->
               def muteMarker = new File(task.temporaryDir, "testlens-mute.marker")
+              def logsDir = new File(task.temporaryDir, "testlens-logs")
               task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
               task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
               task.environment("TESTLENS_MUTE_MARKER_FILE", muteMarker.absolutePath)
+              task.environment("TESTLENS_LOGS_DIR", logsDir.absolutePath)
               task.addTestListener(new TestListener() {
                 void beforeTest(TestDescriptor __) {}
                 void afterTest(TestDescriptor __, TestResult ___) {}
@@ -54,3 +60,8 @@ runs:
           }
         }
         EOF
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      if: ${{ inputs.writeLogFile == 'true' }}
+      with:
+        name: "TestLens logs"
+        path: "**/testlens-logs/**"
