@@ -9,7 +9,7 @@ inputs:
     description: "The version of app.testlens:junit-platform-instrumentation to use"
     required: true
     default: "1.3.0"
-  writeLogFile:
+  write-log-files:
     description: "Writes diagnostic output to log files and attaches them as artifacts to the workflow run"
     required: false
     default: "false"
@@ -25,6 +25,7 @@ runs:
         INSTRUMENTATION_VERSION: ${{ inputs.instrumentation-version }}
         RUNNER_OS: ${{ runner.os }}
         WORKSPACE_PATH: ${{ github.workspace }}
+        WRITE_LOG_FILES: ${{ inputs.write-log-files }}
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
@@ -38,13 +39,15 @@ runs:
               }
             }
             tasks.withType(Test).configureEach { task ->
-              def muteMarker = new File(task.temporaryDir, "testlens-mute.marker")
-              def logsDir = new File(task.temporaryDir, "testlens-logs")
+              def muteMarker = new File(task.temporaryDir, 'testlens-mute.marker')
+              def logsDir = new File(task.temporaryDir, 'testlens-logs')
               task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
               task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
-              task.environment("TESTLENS_MUTE_MARKER_FILE", muteMarker.absolutePath)
-              task.environment("TESTLENS_LOGS_DIR", logsDir.absolutePath)
+              task.environment('TESTLENS_MUTE_MARKER_FILE', muteMarker.absolutePath)
+              if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
+                task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
+              }
               task.addTestListener(new TestListener() {
                 void beforeTest(TestDescriptor __) {}
                 void afterTest(TestDescriptor __, TestResult ___) {}
@@ -61,7 +64,7 @@ runs:
         }
         EOF
     - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-      if: ${{ inputs.writeLogFile == 'true' }}
+      if: ${{ inputs.write-log-files == 'true' }}
       with:
         name: "TestLens logs"
         path: "**/testlens-logs/**"
