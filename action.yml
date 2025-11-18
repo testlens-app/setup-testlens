@@ -63,8 +63,3 @@ runs:
           }
         }
         EOF
-    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-      if: ${{ inputs.write-log-files == 'true' }}
-      with:
-        name: "TestLens logs"
-        path: "**/testlens-logs/**"
