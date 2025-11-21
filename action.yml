@@ -10,7 +10,7 @@ inputs:
     required: true
     default: "1.3.0"
   write-log-files:
-    description: "Writes diagnostic output to log files and attaches them as artifacts to the workflow run"
+    description: "Writes diagnostic output to log files"
     required: false
     default: "false"
 
