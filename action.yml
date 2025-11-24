@@ -27,6 +27,7 @@ runs:
         WORKSPACE_PATH: ${{ github.workspace }}
         WRITE_LOG_FILES: ${{ inputs.write-log-files }}
       run: |
+        # Add Gradle init script
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
         fi
