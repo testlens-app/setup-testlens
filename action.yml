@@ -49,6 +49,8 @@ runs:
               if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
                 task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
               }
+              task.filter.failOnNoMatchingTests = false
+              if (task.hasProperty('failOnNoDiscoveredTests')) task.failOnNoDiscoveredTests = false
               task.addTestListener(new TestListener() {
                 void beforeTest(TestDescriptor __) {}
                 void afterTest(TestDescriptor __, TestResult ___) {}
