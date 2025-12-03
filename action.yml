@@ -32,14 +32,19 @@ runs:
           WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
         fi
         cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
-        gradle.allprojects {
+        gradle.beforeProject { project ->
           if (new File('$WORKSPACE_PATH').absoluteFile == rootProject.projectDir.absoluteFile) {
-            plugins.withId('java') {
-              testing.suites.configureEach {
+            TestLensSetup.configure(project)
+          }
+        }
+        class TestLensSetup {
+          static def configure(Project project) {
+            project.plugins.withId('java') {
+              project.testing.suites.configureEach {
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:$INSTRUMENTATION_VERSION') }
               }
             }
-            tasks.withType(Test).configureEach { task ->
+            project.tasks.withType(Test).configureEach { task ->
               def muteMarker = new File(task.temporaryDir, 'testlens-mute.marker')
               def logsDir = new File(task.temporaryDir, 'testlens-logs')
               task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
