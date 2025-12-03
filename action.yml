@@ -33,12 +33,11 @@ runs:
         fi
         cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.beforeProject { project ->
-          if (new File('$WORKSPACE_PATH').absoluteFile == rootProject.projectDir.absoluteFile) {
-            TestLensSetup.configure(project)
-          }
+          TestLensSetup.configure(project)
         }
         class TestLensSetup {
           static def configure(Project project) {
+            String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
             project.plugins.withId('java') {
               project.testing.suites.configureEach {
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:$INSTRUMENTATION_VERSION') }
@@ -47,9 +46,10 @@ runs:
             project.tasks.withType(Test).configureEach { task ->
               def muteMarker = new File(task.temporaryDir, 'testlens-mute.marker')
               def logsDir = new File(task.temporaryDir, 'testlens-logs')
+              def workUnitPath = task.path + (relativeBuildPath.isEmpty() ? '' : ' [' + relativeBuildPath + ']')
               task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
               task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
-              task.environment('TESTLENS_WORK_UNIT_PATH', task.path)
+              task.environment('TESTLENS_WORK_UNIT_PATH', workUnitPath)
               task.environment('TESTLENS_MUTE_MARKER_FILE', muteMarker.absolutePath)
               if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
                 task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
