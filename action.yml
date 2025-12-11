@@ -33,11 +33,13 @@ runs:
         fi
         cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.beforeProject { project ->
-          TestLensSetup.configure(project)
+          String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
+          if (!relativeBuildPath.startsWith('..') && !new File('relativeBuildPath').isAbsolute()) {
+            TestLensSetup.configure(project, relativeBuildPath)
+          }
         }
         class TestLensSetup {
-          static def configure(Project project) {
-            String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
+          static def configure(Project project, String relativeBuildPath) {
             project.plugins.withId('java') {
               project.testing.suites.configureEach {
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:$INSTRUMENTATION_VERSION') }
