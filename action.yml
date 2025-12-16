@@ -34,7 +34,7 @@ runs:
         cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.beforeProject { project ->
           String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
-          if (!relativeBuildPath.startsWith('..') && !new File('relativeBuildPath').isAbsolute()) {
+          if (!relativeBuildPath.startsWith('..') && !new File(relativeBuildPath).isAbsolute()) {
             TestLensSetup.configure(project, relativeBuildPath)
           }
         }
