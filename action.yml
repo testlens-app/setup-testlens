@@ -17,8 +17,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Add Gradle init script
+    - name: Setup TestLens
       shell: bash
+      working-directory: ${{ github.workspace }}
       env:
         TESTLENS_PROJECT_ID: ${{ github.repository }}
         TESTLENS_GITHUB_TOKEN: ${{ inputs.github-token }}
@@ -27,11 +28,14 @@ runs:
         WORKSPACE_PATH: ${{ github.workspace }}
         WRITE_LOG_FILES: ${{ inputs.write-log-files }}
       run: |
+        # Setup TestLens
+        
         # Add Gradle init script
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
-        fi
-        cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
+        if [[ -n "$GRADLE_USER_HOME" ]]; then
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
+          fi
+          cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
         gradle.beforeProject { project ->
           String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
           if (!relativeBuildPath.startsWith('..') && !new File(relativeBuildPath).isAbsolute()) {
@@ -73,3 +77,59 @@ runs:
           }
         }
         EOF
+        fi
+        
+        # Patch Maven Parent POM
+        if [[ -f "pom.xml" ]]; then
+          POM_FILE="pom.xml"
+          PROFILE_CONTENT="    <profile>
+              <id>testlens</id>
+              <activation>
+                <property>
+                  <name>env.CI</name>
+                </property>
+              </activation>
+              <dependencies>
+                <dependency>
+                  <groupId>app.testlens</groupId>
+                  <artifactId>junit-platform-instrumentation</artifactId>
+                  <version>$INSTRUMENTATION_VERSION</version>
+                  <scope>test</scope>
+                </dependency>
+              </dependencies>
+              <build>
+                <plugins>
+                  <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                      <environmentVariables>
+                        <TESTLENS_PROJECT_ID>$TESTLENS_PROJECT_ID</TESTLENS_PROJECT_ID>
+                        <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
+                        <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
+                      </environmentVariables>
+                    </configuration>
+                  </plugin>
+                </plugins>
+              </build>
+            </profile>"
+          CLOSING_PROFILES_TAG_LINE=$({ grep -n "</profiles>" "$POM_FILE" || true; } | tail -1 | cut -d: -f1)
+          CLOSING_PROJECT_TAG_LINE=$({ grep -n "</project>" "$POM_FILE" || true; } | tail -1 | cut -d: -f1)
+          if [ -n "$CLOSING_PROFILES_TAG_LINE" ]; then
+            {
+              head -n $((CLOSING_PROFILES_TAG_LINE - 1)) "$POM_FILE"
+              echo "$PROFILE_CONTENT"
+              tail -n +$CLOSING_PROFILES_TAG_LINE "$POM_FILE"
+            } > "${POM_FILE}.tmp"
+            mv "${POM_FILE}.tmp" "$POM_FILE"
+          elif [ -n "$CLOSING_PROJECT_TAG_LINE" ]; then
+            {
+              head -n $((CLOSING_PROJECT_TAG_LINE - 1)) "$POM_FILE"
+              echo ""
+              echo "  <profiles>"
+              echo "$PROFILE_CONTENT"
+              echo "  </profiles>"
+              tail -n +$CLOSING_PROJECT_TAG_LINE "$POM_FILE"
+            } > "${POM_FILE}.tmp"
+            mv "${POM_FILE}.tmp" "$POM_FILE"
+          fi
+        fi
