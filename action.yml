@@ -25,6 +25,7 @@ runs:
         TESTLENS_GITHUB_TOKEN: ${{ inputs.github-token }}
         INSTRUMENTATION_VERSION: ${{ inputs.instrumentation-version }}
         RUNNER_OS: ${{ runner.os }}
+        JOB_CHECK_RUN_ID: ${{ job.check_run_id }}
         WORKSPACE_PATH: ${{ github.workspace }}
         WRITE_LOG_FILES: ${{ inputs.write-log-files }}
       run: |
@@ -57,6 +58,7 @@ runs:
               task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', workUnitPath)
               task.environment('TESTLENS_MUTE_MARKER_FILE', muteMarker.absolutePath)
+              task.environment('JOB_CHECK_RUN_ID', '$JOB_CHECK_RUN_ID')
               if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
                 task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
               }
@@ -106,6 +108,7 @@ runs:
                         <TESTLENS_PROJECT_ID>$TESTLENS_PROJECT_ID</TESTLENS_PROJECT_ID>
                         <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
                         <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
+                        <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
                       </environmentVariables>
                     </configuration>
                   </plugin>
