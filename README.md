@@ -26,7 +26,7 @@ jobs:
           distribution: temurin
           java-version: 8 # or later
       - uses: gradle/actions/setup-gradle@v5
-      - uses: testlens-app/setup-testlens@v5
+      - uses: testlens-app/setup-testlens@v1
       - run: ./gradlew build
 ```
 
@@ -47,7 +47,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 8 # or later
-      - uses: testlens-app/setup-testlens@v5
+      - uses: testlens-app/setup-testlens@v1
       - run: mvn verify
 ```
 
