@@ -1,5 +1,8 @@
 # GitHub Action for TestLens
 
+> [!TIP]
+> If you have any questions or feedback, feel free to [open an issue](https://github.com/testlens-app/setup-testlens/issues/new).
+
 The `setup-testlens` action connects a Maven or Gradle build to [TestLens](https://testlens.app).
 
 ## Prerequisites
