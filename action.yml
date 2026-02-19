@@ -36,29 +36,39 @@ runs:
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
           fi
+          echo -n $TESTLENS_GITHUB_TOKEN > $GRADLE_USER_HOME/init.d/TESTLENS_GITHUB_TOKEN
+          echo -n $JOB_CHECK_RUN_ID > $GRADLE_USER_HOME/init.d/JOB_CHECK_RUN_ID
           cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
+        import org.gradle.api.provider.*;
         gradle.beforeProject { project ->
           String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
           if (!relativeBuildPath.startsWith('..') && !new File(relativeBuildPath).isAbsolute()) {
             TestLensSetup.configure(project, relativeBuildPath)
           }
         }
-        class TestLensSetup {
+        abstract class TestLensGitHubTokenValueSource implements ValueSource<String, ValueSourceParameters.None> {
+          String obtain() { new File('$GRADLE_USER_HOME/init.d/TESTLENS_GITHUB_TOKEN').text }
+        }
+        abstract class TestLensJobCheckRunIdValueSource implements ValueSource<String, ValueSourceParameters.None> {
+          String obtain() { new File('$GRADLE_USER_HOME/init.d/JOB_CHECK_RUN_ID').text }
+        }
+        final class TestLensSetup {
           static def configure(Project project, String relativeBuildPath) {
             project.plugins.withId('java') {
               project.testing.suites.configureEach {
                 dependencies { runtimeOnly('app.testlens:junit-platform-instrumentation:$INSTRUMENTATION_VERSION') }
               }
             }
+            def providers = project.providers
             project.tasks.withType(Test).configureEach { task ->
               def muteMarker = new File(task.temporaryDir, 'testlens-mute.marker')
               def logsDir = new File(task.temporaryDir, 'testlens-logs')
               def workUnitPath = task.path + (relativeBuildPath.isEmpty() ? '' : ' [' + relativeBuildPath + ']')
               task.environment('TESTLENS_PROJECT_ID', '$TESTLENS_PROJECT_ID')
-              task.environment('TESTLENS_GITHUB_TOKEN', '$TESTLENS_GITHUB_TOKEN')
               task.environment('TESTLENS_WORK_UNIT_PATH', workUnitPath)
               task.environment('TESTLENS_MUTE_MARKER_FILE', muteMarker.absolutePath)
-              task.environment('JOB_CHECK_RUN_ID', '$JOB_CHECK_RUN_ID')
+              task.environment('TESTLENS_GITHUB_TOKEN', providers.of(TestLensGitHubTokenValueSource){}.get())
+              task.environment('JOB_CHECK_RUN_ID', providers.of(TestLensJobCheckRunIdValueSource){}.get())
               if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
                 task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
               }
