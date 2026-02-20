@@ -39,6 +39,7 @@ runs:
         if [[ -n "$GRADLE_USER_HOME" ]]; then
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
+            GRADLE_USER_HOME=$(echo "$GRADLE_USER_HOME" | sed 's|\\|/|g')
           fi
           echo -n $TESTLENS_GITHUB_TOKEN > $GRADLE_USER_HOME/init.d/TESTLENS_GITHUB_TOKEN
           echo -n $JOB_CHECK_RUN_ID > $GRADLE_USER_HOME/init.d/JOB_CHECK_RUN_ID
