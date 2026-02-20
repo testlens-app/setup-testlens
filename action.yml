@@ -1,5 +1,9 @@
 name: "Setup TestLens"
 description: "Performs TestLens setup"
+branding:
+  color: green
+  icon: eye
+
 inputs:
   github-token:
     description: "The GitHub token used for authentication"
