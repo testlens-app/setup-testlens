@@ -34,7 +34,7 @@ runs:
         WRITE_LOG_FILES: ${{ inputs.write-log-files }}
       run: |
         # Setup TestLens
-        
+
         # Add Gradle init script
         if [[ -n "$GRADLE_USER_HOME" ]]; then
           if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -95,7 +95,7 @@ runs:
         }
         EOF
         fi
-        
+
         # Patch Maven Parent POM
         if [[ -f "pom.xml" ]]; then
           POM_FILE="pom.xml"
@@ -118,6 +118,17 @@ runs:
                 <plugins>
                   <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                      <environmentVariables>
+                        <TESTLENS_PROJECT_ID>$TESTLENS_PROJECT_ID</TESTLENS_PROJECT_ID>
+                        <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
+                        <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
+                        <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
+                      </environmentVariables>
+                    </configuration>
+                  </plugin>
+                  <plugin>
+                    <artifactId>maven-failsafe-plugin</artifactId>
                     <configuration>
                       <environmentVariables>
                         <TESTLENS_PROJECT_ID>$TESTLENS_PROJECT_ID</TESTLENS_PROJECT_ID>
