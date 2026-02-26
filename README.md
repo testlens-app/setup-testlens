@@ -55,4 +55,4 @@ jobs:
 ```
 
 The action expects the root parent POM to be present in the root directory of the repository.
-It alters the POM by adding a profile that instruments all executions of the `maven-surefire-plugin`.
+It alters the POM by adding a profile that instruments all executions of the `maven-surefire-plugin` and `maven-failsafe-plugin`.
