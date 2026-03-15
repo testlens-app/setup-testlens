@@ -1,0 +1,10 @@
+# See https://github.com/typesafegithub/github-actions-typing
+inputs:
+  github-token:
+    type: string
+
+  instrumentation-version:
+    type: string
+
+  write-log-files:
+    type: boolean
