@@ -124,6 +124,7 @@ runs:
                         <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
                         <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
                         <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
+                        <TESTLENS_LOGS_DIR>$([[ $WRITE_LOG_FILES = "true" ]] && echo '${project.build.directory}/testlens-logs' || true)</TESTLENS_LOGS_DIR>
                       </environmentVariables>
                     </configuration>
                   </plugin>
@@ -135,6 +136,7 @@ runs:
                         <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
                         <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
                         <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
+                        <TESTLENS_LOGS_DIR>$([[ $WRITE_LOG_FILES = "true" ]] && echo '${project.build.directory}/testlens-logs' || true)</TESTLENS_LOGS_DIR>
                       </environmentVariables>
                     </configuration>
                   </plugin>
