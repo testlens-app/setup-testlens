@@ -41,4 +41,5 @@ jobs:
         with:
           script: |
             const createGithubRelease = require('./.github/scripts/create-github-release.js');
-            createGithubRelease({ github, context, process.env.RELEASE_TAG });
+            const releaseTag = process.env.RELEASE_TAG;
+            createGithubRelease({ github, context, releaseTag });
