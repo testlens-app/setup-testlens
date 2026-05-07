@@ -14,9 +14,12 @@ inputs:
     required: true
     default: "1.9.0"
   write-log-files:
-    description: "Writes diagnostic output to log files"
+    description: "Writes diagnostic output to log files (**/testlens-logs/*.log)"
     required: false
     default: "false"
+  session-timeout-seconds:
+    description: "The timeout (in seconds) to use when waiting for a session to be completed"
+    required: false
 
 runs:
   using: "composite"
@@ -32,6 +35,7 @@ runs:
         JOB_CHECK_RUN_ID: ${{ job.check_run_id }}
         WORKSPACE_PATH: ${{ github.workspace }}
         WRITE_LOG_FILES: ${{ inputs.write-log-files }}
+        SESSION_TIMEOUT_SECONDS: ${{ inputs.session-timeout-seconds }}
       run: |
         # Setup TestLens
 
@@ -76,6 +80,9 @@ runs:
               task.environment('JOB_CHECK_RUN_ID', providers.of(TestLensJobCheckRunIdValueSource){}.get())
               if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
                 task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
+              }
+              if (!'$SESSION_TIMEOUT_SECONDS'.empty) {
+                task.environment('TESTLENS_SESSION_TIMEOUT_SECONDS', '$SESSION_TIMEOUT_SECONDS')
               }
               task.filter.failOnNoMatchingTests = false
               if (task.hasProperty('failOnNoDiscoveredTests')) task.failOnNoDiscoveredTests = false
@@ -125,6 +132,7 @@ runs:
                         <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
                         <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
                         <TESTLENS_LOGS_DIR>$([[ $WRITE_LOG_FILES = "true" ]] && echo '${project.build.directory}/testlens-logs' || true)</TESTLENS_LOGS_DIR>
+                        $([[ -n "$SESSION_TIMEOUT_SECONDS" ]] && echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>" || true)
                       </environmentVariables>
                     </configuration>
                   </plugin>
@@ -137,6 +145,7 @@ runs:
                         <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
                         <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
                         <TESTLENS_LOGS_DIR>$([[ $WRITE_LOG_FILES = "true" ]] && echo '${project.build.directory}/testlens-logs' || true)</TESTLENS_LOGS_DIR>
+                        $([[ -n "$SESSION_TIMEOUT_SECONDS" ]] && echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>" || true)
                       </environmentVariables>
                     </configuration>
                   </plugin>
