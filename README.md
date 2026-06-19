@@ -12,11 +12,6 @@ https://github.com/typesafegithub/github-workflows-kt which allows writing workf
 
 The [TestLens GitHub App](https://github.com/apps/testlens-app) needs to be installed on the repository.
 
-> [!IMPORTANT]
-> **TestLens is currently in private beta.**
-> Therefore, an extra step is required to onboard a new GitHub organization.
-> If you’re interested in trying out TestLens, please [contact us via the website](https://testlens.app/contact/).
-
 ## Setup for Gradle
 
 For Gradle, the action should be added right after the `setup-gradle` action in all workflow files that should be instrumented:
