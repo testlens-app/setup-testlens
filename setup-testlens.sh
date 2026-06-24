@@ -22,6 +22,7 @@ if [[ -n "$GRADLE_USER_HOME" ]] || [[ -f settings.gradle ]] || [[ -f settings.gr
   fi
 
   # write files required by TestLens
+  mkdir -p "$GRADLE_USER_HOME/init.d"
   echo -n "$TESTLENS_GITHUB_TOKEN" > "$GRADLE_USER_HOME"/init.d/TESTLENS_GITHUB_TOKEN
   echo -n "$JOB_CHECK_RUN_ID" > "$GRADLE_USER_HOME"/init.d/JOB_CHECK_RUN_ID
   cat << EOF > "$GRADLE_USER_HOME"/init.d/testlens-init.gradle
