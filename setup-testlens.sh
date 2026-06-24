@@ -19,6 +19,16 @@ if [[ -n "$GRADLE_USER_HOME" ]] || [[ -f settings.gradle ]] || [[ -f settings.gr
     WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
     # shellcheck disable=SC2001
     GRADLE_USER_HOME=$(echo "$GRADLE_USER_HOME" | sed 's|\\|/|g')
+    # When running in a shell script (as opposed to inline action YAML), bash on Windows
+    # normalizes paths to Git Bash style (/c/Users/...). The Groovy init script however
+    # runs on the JVM which requires Windows style paths (C:/Users/...).
+    # shellcheck disable=SC2001
+    GRADLE_USER_HOME_GROOVY=$(echo "$GRADLE_USER_HOME" | sed 's|^/\([a-zA-Z]\)/|\1:/|')
+    # shellcheck disable=SC2001
+    WORKSPACE_PATH_GROOVY=$(echo "$WORKSPACE_PATH" | sed 's|^/\([a-zA-Z]\)/|\1:/|')
+  else
+    GRADLE_USER_HOME_GROOVY="$GRADLE_USER_HOME"
+    WORKSPACE_PATH_GROOVY="$WORKSPACE_PATH"
   fi
 
   # write files required by TestLens
@@ -28,16 +38,16 @@ if [[ -n "$GRADLE_USER_HOME" ]] || [[ -f settings.gradle ]] || [[ -f settings.gr
   cat << EOF > "$GRADLE_USER_HOME"/init.d/testlens-init.gradle
 import org.gradle.api.provider.*;
 gradle.beforeProject { project ->
-  String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
+  String relativeBuildPath = new File('$WORKSPACE_PATH_GROOVY').relativePath(project.rootDir)
   if (!relativeBuildPath.startsWith('..') && !new File(relativeBuildPath).isAbsolute()) {
     TestLensSetup.configure(project, relativeBuildPath)
   }
 }
 abstract class TestLensGitHubTokenValueSource implements ValueSource<String, ValueSourceParameters.None> {
-  String obtain() { new File('$GRADLE_USER_HOME/init.d/TESTLENS_GITHUB_TOKEN').text }
+  String obtain() { new File('$GRADLE_USER_HOME_GROOVY/init.d/TESTLENS_GITHUB_TOKEN').text }
 }
 abstract class TestLensJobCheckRunIdValueSource implements ValueSource<String, ValueSourceParameters.None> {
-  String obtain() { new File('$GRADLE_USER_HOME/init.d/JOB_CHECK_RUN_ID').text }
+  String obtain() { new File('$GRADLE_USER_HOME_GROOVY/init.d/JOB_CHECK_RUN_ID').text }
 }
 final class TestLensSetup {
   static def configure(Project project, String relativeBuildPath) {
