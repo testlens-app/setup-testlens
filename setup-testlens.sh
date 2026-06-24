@@ -1,4 +1,6 @@
 #! /usr/bin/env bash
+set -eo pipefail
+
 # Add Gradle init script
 # Detect Gradle build based on env var, or presence the of settings script
 if [[ -n "$GRADLE_USER_HOME" ]] || [[ -f settings.gradle ]] || [[ -f settings.gradle.kts ]]; then
