@@ -1,10 +1,21 @@
 #! /usr/bin/env bash
 # Add Gradle init script
-if [[ -n "$GRADLE_USER_HOME" ]]; then
+# Detect Gradle build based on env var, or presence the of settings script
+if [[ -n "$GRADLE_USER_HOME" ]] || [[ -f settings.gradle ]] || [[ -f settings.gradle.kts ]]; then
+
+  # set Gradle home to the default location if it was not set before, e.g. we detected the build
+  # because of a settings script
+  if [[ -z "$GRADLE_USER_HOME" ]]; then
+    GRADLE_USER_HOME="$HOME/.gradle"
+  fi
+
+  # normalize file paths on windows
   if [[ "$RUNNER_OS" == "Windows" ]]; then
     WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
     GRADLE_USER_HOME=$(echo "$GRADLE_USER_HOME" | sed 's|\\|/|g')
   fi
+
+  # write files required by TestLens
   echo -n $TESTLENS_GITHUB_TOKEN > $GRADLE_USER_HOME/init.d/TESTLENS_GITHUB_TOKEN
   echo -n $JOB_CHECK_RUN_ID > $GRADLE_USER_HOME/init.d/JOB_CHECK_RUN_ID
   cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
