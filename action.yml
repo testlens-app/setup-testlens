@@ -38,4 +38,11 @@ runs:
       working-directory: ${{ github.workspace }}
       run: |
         # Set up TestLens
-        ${{ github.action_path }}/setup-testlens.sh
+
+        # Normalize path separators in the script path. On Windows, github.action_path uses
+        # backslashes for the filesystem portion (e.g. D:\a\_actions\testlens-app\setup-testlens\<version>),
+        # but when the action is referenced by branch name (e.g. uses: testlens-app/setup-testlens@my/branch/name)
+        # the branch name is appended with forward slashes, resulting in a mixed-separator path
+        # that bash cannot resolve.
+        SCRIPT_PATH=$(echo "${{ github.action_path }}/setup-testlens.sh" | sed 's|\\|/|g')
+        "$SCRIPT_PATH"
