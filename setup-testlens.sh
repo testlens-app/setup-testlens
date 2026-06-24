@@ -11,14 +11,18 @@ if [[ -n "$GRADLE_USER_HOME" ]] || [[ -f settings.gradle ]] || [[ -f settings.gr
 
   # normalize file paths on windows
   if [[ "$RUNNER_OS" == "Windows" ]]; then
+    # shellcheck disable=SC2001
+    # SC2001: sed is intentionally used here over bash parameter expansion for readability,
+    # as the bash equivalent `${VAR//\\//}` is visually ambiguous for backslash-to-slash substitution.
     WORKSPACE_PATH=$(echo "$WORKSPACE_PATH" | sed 's|\\|/|g')
+    # shellcheck disable=SC2001
     GRADLE_USER_HOME=$(echo "$GRADLE_USER_HOME" | sed 's|\\|/|g')
   fi
 
   # write files required by TestLens
-  echo -n $TESTLENS_GITHUB_TOKEN > $GRADLE_USER_HOME/init.d/TESTLENS_GITHUB_TOKEN
-  echo -n $JOB_CHECK_RUN_ID > $GRADLE_USER_HOME/init.d/JOB_CHECK_RUN_ID
-  cat << EOF > $GRADLE_USER_HOME/init.d/testlens-init.gradle
+  echo -n "$TESTLENS_GITHUB_TOKEN" > "$GRADLE_USER_HOME"/init.d/TESTLENS_GITHUB_TOKEN
+  echo -n "$JOB_CHECK_RUN_ID" > "$GRADLE_USER_HOME"/init.d/JOB_CHECK_RUN_ID
+  cat << EOF > "$GRADLE_USER_HOME"/init.d/testlens-init.gradle
 import org.gradle.api.provider.*;
 gradle.beforeProject { project ->
   String relativeBuildPath = new File('$WORKSPACE_PATH').relativePath(project.rootDir)
@@ -77,6 +81,8 @@ fi
 # Patch Maven Parent POM
 if [[ -f "pom.xml" ]]; then
   POM_FILE="pom.xml"
+  # shellcheck disable=SC2016
+  # SC2016: Single-quoted `${project.build.directory}` is a Maven expression, not a shell variable - it must not be expanded.
   PROFILE_CONTENT="    <profile>
       <id>testlens</id>
       <activation>
@@ -102,8 +108,8 @@ if [[ -f "pom.xml" ]]; then
                 <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
                 <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
                 <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
-                <TESTLENS_LOGS_DIR>$([[ $WRITE_LOG_FILES = "true" ]] && echo '${project.build.directory}/testlens-logs' || true)</TESTLENS_LOGS_DIR>
-                $([[ -n "$SESSION_TIMEOUT_SECONDS" ]] && echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>" || true)
+                <TESTLENS_LOGS_DIR>$(if [[ $WRITE_LOG_FILES = "true" ]]; then echo '${project.build.directory}/testlens-logs'; fi)</TESTLENS_LOGS_DIR>
+                $(if [[ -n "$SESSION_TIMEOUT_SECONDS" ]]; then echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>"; fi)
               </environmentVariables>
             </configuration>
           </plugin>
@@ -115,8 +121,8 @@ if [[ -f "pom.xml" ]]; then
                 <TESTLENS_GITHUB_TOKEN>$TESTLENS_GITHUB_TOKEN</TESTLENS_GITHUB_TOKEN>
                 <TESTLENS_WORK_UNIT_PATH>\${project.name}</TESTLENS_WORK_UNIT_PATH>
                 <JOB_CHECK_RUN_ID>$JOB_CHECK_RUN_ID</JOB_CHECK_RUN_ID>
-                <TESTLENS_LOGS_DIR>$([[ $WRITE_LOG_FILES = "true" ]] && echo '${project.build.directory}/testlens-logs' || true)</TESTLENS_LOGS_DIR>
-                $([[ -n "$SESSION_TIMEOUT_SECONDS" ]] && echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>" || true)
+                <TESTLENS_LOGS_DIR>$(if [[ $WRITE_LOG_FILES = "true" ]]; then echo '${project.build.directory}/testlens-logs'; fi)</TESTLENS_LOGS_DIR>
+                $(if [[ -n "$SESSION_TIMEOUT_SECONDS" ]]; then echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>"; fi)
               </environmentVariables>
             </configuration>
           </plugin>
@@ -129,7 +135,7 @@ if [[ -f "pom.xml" ]]; then
     {
       head -n $((CLOSING_PROFILES_TAG_LINE - 1)) "$POM_FILE"
       echo "$PROFILE_CONTENT"
-      tail -n +$CLOSING_PROFILES_TAG_LINE "$POM_FILE"
+      tail -n +"$CLOSING_PROFILES_TAG_LINE" "$POM_FILE"
     } > "${POM_FILE}.tmp"
     mv "${POM_FILE}.tmp" "$POM_FILE"
   elif [ -n "$CLOSING_PROJECT_TAG_LINE" ]; then
@@ -139,7 +145,7 @@ if [[ -f "pom.xml" ]]; then
       echo "  <profiles>"
       echo "$PROFILE_CONTENT"
       echo "  </profiles>"
-      tail -n +$CLOSING_PROJECT_TAG_LINE "$POM_FILE"
+      tail -n +"$CLOSING_PROJECT_TAG_LINE" "$POM_FILE"
     } > "${POM_FILE}.tmp"
     mv "${POM_FILE}.tmp" "$POM_FILE"
   fi
