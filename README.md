@@ -10,7 +10,7 @@ https://github.com/typesafegithub/github-workflows-kt which allows writing workf
 
 ## Prerequisites
 
-The [TestLens GitHub App](https://github.com/apps/testlens-app) needs to be installed on the repository.
+The [TestLens GitHub App](https://github.com/marketplace/testlens-app) needs to be installed on the repository.
 
 ## Setup for Gradle
 
