@@ -99,9 +99,7 @@ if [[ -f "pom.xml" ]]; then
   PROFILE_CONTENT="    <profile>
       <id>testlens</id>
       <activation>
-        <property>
-          <name>env.CI</name>
-        </property>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <dependencies>
         <dependency>
