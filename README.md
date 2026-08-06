@@ -32,6 +32,8 @@ jobs:
 ```
 
 The action writes a Gradle init script that instruments all `Test` tasks.
+The script is located in the `$GRADLE_USER_HOME/init.d` directory.
+In case your pipeline starts the build inside a container, make sure that `$GRADLE_USER_HOME` is mounted in the container.
 
 ## Setup for Maven
 
