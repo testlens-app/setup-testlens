@@ -1,4 +1,4 @@
-name: "Set up TestLens"
+name: "Setup TestLens"
 description: "Performs TestLens setup"
 branding:
   color: green
