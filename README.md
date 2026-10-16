@@ -56,3 +56,26 @@ jobs:
 
 The action expects the root parent POM to be present in the root directory of the repository.
 It alters the POM by adding a profile that instruments all executions of the `maven-surefire-plugin` and `maven-failsafe-plugin`.
+
+## Authentication
+
+By default, the action passes the job's `GITHUB_TOKEN` to TestLens to prove that test results come from your repository.
+
+To avoid sending the `GITHUB_TOKEN`, grant the job the `id-token: write` permission and set `use-oidc: true`.
+The action then exchanges a GitHub Actions OIDC token for a short-lived TestLens token.
+If no OIDC token is available, e.g. for pull requests from forks, it falls back to the `GITHUB_TOKEN` (with a warning unless the pull request comes from a fork)
+To disable the fallback, set `github-token: ""`.
+
+```yml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # ...
+      - uses: testlens-app/setup-testlens@v1
+        with:
+          use-oidc: true
+```
