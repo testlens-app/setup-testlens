@@ -3,6 +3,12 @@ inputs:
   github-token:
     type: string
 
+  use-oidc:
+    type: boolean
+
+  token-exchange-url:
+    type: string
+
   instrumentation-version:
     type: string
 

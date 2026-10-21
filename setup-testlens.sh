@@ -15,9 +15,44 @@ write_env_properties_file() {
   {
     while IFS= read -r var_name; do
       printf '%s=%s\n' "$var_name" "$(escape_for_java_properties "${!var_name}")"
-    done < <(printf '%s\n' "${!GITHUB_@}" "${!RUNNER_@}" "JOB_CHECK_RUN_ID" "TESTLENS_GITHUB_TOKEN" | sort -u)
+    done < <(printf '%s\n' "${!GITHUB_@}" "${!RUNNER_@}" "JOB_CHECK_RUN_ID" "TESTLENS_GITHUB_TOKEN" ${TESTLENS_TOKEN:+TESTLENS_TOKEN} | sort -u)
   } > "$properties_file"
 }
+
+TESTLENS_TOKEN=""
+OIDC_AUDIENCE="https://api.testlens.app"
+if [[ "$USE_OIDC" == "true" ]]; then
+  if [[ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" && -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]]; then
+    for cmd in curl jq; do
+      command -v "$cmd" > /dev/null || { echo "::error::'use-oidc: true' requires '$cmd' to be installed on the runner"; exit 1; }
+    done
+    # Tokens are piped via stdin so they don't show up in the process list
+    RESPONSE=$(printf 'Authorization: Bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" | curl -sS --fail-with-body --connect-timeout 10 --max-time 30 --get \
+      -H @- \
+      --data-urlencode "audience=$OIDC_AUDIENCE" \
+      "$ACTIONS_ID_TOKEN_REQUEST_URL") || { echo "::error::Failed to request GitHub Actions OIDC token: $RESPONSE"; exit 1; }
+    ID_TOKEN=$(jq -er '.value' <<< "$RESPONSE") || { echo "::error::Unexpected response when requesting GitHub Actions OIDC token"; exit 1; }
+    echo "::add-mask::$ID_TOKEN"
+    RESPONSE=$(printf '%s' "$ID_TOKEN" | curl -sS --fail-with-body --connect-timeout 10 --max-time 30 \
+      --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+      --data-urlencode "subject_token@-" \
+      --data-urlencode "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
+      --data-urlencode "job_id=$JOB_CHECK_RUN_ID" \
+      "$TOKEN_EXCHANGE_URL") || { echo "::error::Failed to exchange OIDC token for TestLens token: $RESPONSE"; exit 1; }
+    TESTLENS_TOKEN=$(jq -er '.access_token' <<< "$RESPONSE") || { echo "::error::Unexpected response from TestLens token exchange: $RESPONSE"; exit 1; }
+    echo "::add-mask::$TESTLENS_TOKEN"
+    echo "Authenticated with TestLens via OIDC"
+    unset TESTLENS_GITHUB_TOKEN ID_TOKEN RESPONSE
+  # GitHub doesn't issue ID tokens to pull requests from forks
+  elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && -n "$PULL_REQUEST_HEAD_REPO" && "$PULL_REQUEST_HEAD_REPO" != "$GITHUB_REPOSITORY" ]]; then
+    echo "No OIDC token available for pull requests from forks; falling back to GitHub token"
+  else
+    echo "::warning::No OIDC token available; falling back to GitHub token. Grant the job the 'id-token: write' permission to use 'use-oidc: true'."
+  fi
+fi
+if [[ -z "$TESTLENS_TOKEN" && -z "$TESTLENS_GITHUB_TOKEN" ]]; then
+  echo "::warning::Neither an OIDC token nor a GitHub token is available; test results of this run won't be reported to TestLens"
+fi
 
 # Add Gradle init script
 # Detect Gradle build based on env var, or presence the of settings script
