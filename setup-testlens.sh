@@ -42,7 +42,7 @@ if [[ "$USE_OIDC" == "true" ]]; then
     TESTLENS_TOKEN=$(jq -er '.access_token' <<< "$RESPONSE") || { echo "::error::Unexpected response from TestLens token exchange: $RESPONSE"; exit 1; }
     echo "::add-mask::$TESTLENS_TOKEN"
     echo "Authenticated with TestLens via OIDC"
-    unset TESTLENS_GITHUB_TOKEN
+    unset TESTLENS_GITHUB_TOKEN ID_TOKEN RESPONSE
   # GitHub doesn't issue ID tokens to pull requests from forks
   elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && -n "$PULL_REQUEST_HEAD_REPO" && "$PULL_REQUEST_HEAD_REPO" != "$GITHUB_REPOSITORY" ]]; then
     echo "No OIDC token available for pull requests from forks; falling back to GitHub token"
