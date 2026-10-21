@@ -27,13 +27,13 @@ if [[ "$USE_OIDC" == "true" ]]; then
       command -v "$cmd" > /dev/null || { echo "::error::'use-oidc: true' requires '$cmd' to be installed on the runner"; exit 1; }
     done
     # Tokens are piped via stdin so they don't show up in the process list
-    RESPONSE=$(printf 'Authorization: Bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" | curl -sS --fail-with-body --get \
+    RESPONSE=$(printf 'Authorization: Bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" | curl -sS --fail-with-body --connect-timeout 10 --max-time 30 --get \
       -H @- \
       --data-urlencode "audience=$OIDC_AUDIENCE" \
       "$ACTIONS_ID_TOKEN_REQUEST_URL") || { echo "::error::Failed to request GitHub Actions OIDC token: $RESPONSE"; exit 1; }
     ID_TOKEN=$(jq -er '.value' <<< "$RESPONSE") || { echo "::error::Unexpected response when requesting GitHub Actions OIDC token"; exit 1; }
     echo "::add-mask::$ID_TOKEN"
-    RESPONSE=$(printf '%s' "$ID_TOKEN" | curl -sS --fail-with-body \
+    RESPONSE=$(printf '%s' "$ID_TOKEN" | curl -sS --fail-with-body --connect-timeout 10 --max-time 30 \
       --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
       --data-urlencode "subject_token@-" \
       --data-urlencode "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
