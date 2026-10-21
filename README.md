@@ -63,7 +63,7 @@ By default, the action passes the job's `GITHUB_TOKEN` to TestLens to prove that
 
 To avoid sending the `GITHUB_TOKEN`, grant the job the `id-token: write` permission and set `use-oidc: true`.
 The action then exchanges a GitHub Actions OIDC token for a short-lived TestLens token.
-If no OIDC token is available, e.g. for pull requests from forks, it falls back to the `GITHUB_TOKEN` (with a warning unless the pull request comes from a fork)
+If no OIDC token is available, e.g. for pull requests from forks, it falls back to the `GITHUB_TOKEN` (with a warning unless the pull request comes from a fork).
 To disable the fallback, set `github-token: ""`.
 
 ```yml
