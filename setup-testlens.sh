@@ -44,7 +44,7 @@ if [[ "$USE_OIDC" == "true" ]]; then
     echo "Authenticated with TestLens via OIDC"
     unset TESTLENS_GITHUB_TOKEN
   # GitHub doesn't issue ID tokens to pull requests from forks
-  elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && -n "$PULL_REQUEST_HEAD_REPO" && "$PULL_REQUEST_HEAD_REPO" != "$TESTLENS_PROJECT_ID" ]]; then
+  elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && -n "$PULL_REQUEST_HEAD_REPO" && "$PULL_REQUEST_HEAD_REPO" != "$GITHUB_REPOSITORY" ]]; then
     echo "No OIDC token available for pull requests from forks; falling back to GitHub token"
   else
     echo "::warning::No OIDC token available; falling back to GitHub token. Grant the job the 'id-token: write' permission to use 'use-oidc: true'."

@@ -7,6 +7,7 @@ load node_modules/bats-assert/load
 setup() {
   _common_setup
   unset "${!GITHUB_@}"
+  export GITHUB_REPOSITORY="octo/demo"
   GRADLE_ENV_PROPS="$WORKDIR/.gradle/testlens-env.properties"
   echo "rootProject.name = 'demo'" > settings.gradle
 
@@ -78,6 +79,7 @@ with_id_token() {
 @test "falls back to GitHub token with warning for same-repository pull requests" {
   export GITHUB_EVENT_NAME="pull_request"
   export PULL_REQUEST_HEAD_REPO="octo/demo"
+  export TESTLENS_PROJECT_ID="unrelated-project-id"
   run "$SCRIPT"
   assert_success
   assert_output --partial "::warning::No OIDC token available"
