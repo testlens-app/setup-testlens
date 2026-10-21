@@ -126,16 +126,7 @@ with_id_token() {
 
 @test "fails with error naming jq when it isn't installed" {
   with_id_token
-  # rebuild PATH from symlinks to every command except jq
-  local path_dir="$TEST_TMP/path" dirs dir file
-  mkdir -p "$path_dir"
-  IFS=: read -ra dirs <<< "$PATH"
-  for dir in "${dirs[@]}"; do
-    for file in "$dir"/*; do
-      [[ ! -e "$file" || "${file##*/}" == jq || -e "$path_dir/${file##*/}" ]] || ln -s "$file" "$path_dir/${file##*/}"
-    done
-  done
-  PATH="$path_dir" run "$SCRIPT"
+  PATH="$TEST_TMP/bin" run "$BASH" "$SCRIPT"
   assert_failure
   assert_output --partial "::error::'use-oidc: true' requires 'jq'"
   assert_no_file "$CURL_LOG"
