@@ -11,6 +11,6 @@
     "bats": "1.13.0",
     "bats-assert": "2.2.4",
     "bats-support": "0.3.0",
-    "fast-xml-parser": "5.10.1"
+    "fast-xml-parser": "5.12.0"
   }
 }
