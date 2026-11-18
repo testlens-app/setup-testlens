@@ -51,6 +51,16 @@ setup() {
   assert_contains pom.xml "<TESTLENS_PROJECT_ID>octo/demo-repo</TESTLENS_PROJECT_ID>"
 }
 
+@test "surefire/failsafe report the build tool and its version" {
+  copy_fixture maven-single
+  run "$SCRIPT"
+  assert_contains pom.xml "<app.testlens.build-tool.type>maven</app.testlens.build-tool.type>"
+  assert_contains pom.xml "<app.testlens.build-tool.version>\${maven.version}</app.testlens.build-tool.version>"
+  local count
+  count=$(grep -c "app.testlens.build-tool.type" pom.xml)
+  assert_equal "$count" 2
+}
+
 @test "instrumentation dependency uses the requested version and test scope" {
   copy_fixture maven-single
   export INSTRUMENTATION_VERSION="9.9.9"

@@ -107,6 +107,9 @@ final class TestLensSetup {
       task.environment('TESTLENS_WORK_UNIT_PATH', workUnitPath)
       task.environment('TESTLENS_MUTE_MARKER_FILE', muteMarker.absolutePath)
       task.environment('TESTLENS_ENV_PROPERTIES_FILE', envPropertiesFile.absolutePath)
+      // Report the build tool and its version in the session's build environment
+      task.systemProperty('app.testlens.build-tool.type', 'gradle')
+      task.systemProperty('app.testlens.build-tool.version', project.gradle.gradleVersion)
       if ('true'.equalsIgnoreCase('$WRITE_LOG_FILES')) {
         task.environment('TESTLENS_LOGS_DIR', logsDir.absolutePath)
       }
@@ -168,6 +171,10 @@ if [[ -f "pom.xml" ]]; then
                 <TESTLENS_LOGS_DIR>$(if [[ $WRITE_LOG_FILES = "true" ]]; then echo '${project.build.directory}/testlens-logs'; fi)</TESTLENS_LOGS_DIR>
                 $(if [[ -n "$SESSION_TIMEOUT_SECONDS" ]]; then echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>"; fi)
               </environmentVariables>
+              <systemPropertyVariables>
+                <app.testlens.build-tool.type>maven</app.testlens.build-tool.type>
+                <app.testlens.build-tool.version>\${maven.version}</app.testlens.build-tool.version>
+              </systemPropertyVariables>
             </configuration>
           </plugin>
           <plugin>
@@ -180,6 +187,10 @@ if [[ -f "pom.xml" ]]; then
                 <TESTLENS_LOGS_DIR>$(if [[ $WRITE_LOG_FILES = "true" ]]; then echo '${project.build.directory}/testlens-logs'; fi)</TESTLENS_LOGS_DIR>
                 $(if [[ -n "$SESSION_TIMEOUT_SECONDS" ]]; then echo "<TESTLENS_SESSION_TIMEOUT_SECONDS>$SESSION_TIMEOUT_SECONDS</TESTLENS_SESSION_TIMEOUT_SECONDS>"; fi)
               </environmentVariables>
+              <systemPropertyVariables>
+                <app.testlens.build-tool.type>maven</app.testlens.build-tool.type>
+                <app.testlens.build-tool.version>\${maven.version}</app.testlens.build-tool.version>
+              </systemPropertyVariables>
             </configuration>
           </plugin>
         </plugins>

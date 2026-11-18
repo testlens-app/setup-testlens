@@ -62,6 +62,14 @@ setup() {
   assert_not_contains "$init" "$WORKDIR/.gradle/testlens-env.properties"
 }
 
+@test "init script reports the build tool and its version on test tasks" {
+  export GRADLE_USER_HOME="$GRADLE_HOME"
+  run "$SCRIPT"
+  local init="$GRADLE_HOME/init.d/testlens-init.gradle"
+  assert_contains "$init" "task.systemProperty('app.testlens.build-tool.type', 'gradle')"
+  assert_contains "$init" "task.systemProperty('app.testlens.build-tool.version', project.gradle.gradleVersion)"
+}
+
 @test "log-files switch is included in init script" {
   export GRADLE_USER_HOME="$GRADLE_HOME"
   export WRITE_LOG_FILES="true"

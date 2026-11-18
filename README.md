@@ -57,6 +57,10 @@ jobs:
 The action expects the root parent POM to be present in the root directory of the repository.
 It alters the POM by adding a profile that instruments all executions of the `maven-surefire-plugin` and `maven-failsafe-plugin`.
 
+## Reported build environment
+
+The instrumented test JVMs report the build environment of their session to TestLens: the operating system and Java version, and the build tool with its version. Gradle reports the version of the distribution running the build (`gradle`); Maven reports the version of the Maven process running surefire/failsafe (`maven`). The data appears in the TestLens API's responses as the `buildToolType` and `buildToolVersion` fields of the `buildEnvironment` object.
+
 ## Authentication
 
 By default, the action passes the job's `GITHUB_TOKEN` to TestLens to prove that test results come from your repository.
